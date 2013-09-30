@@ -41,13 +41,15 @@ var User = mongoose.model("User", UserSchema, collName);
 suite("friends", function() {
   var u1, u2;
 
-  setup(function(done) {
+  function ensureUsers(done) {
     u1 = new User({name: "Alice"})
     u2 = new User({name: "Roger"})
     User.remove(function () {
       User.create([u1, u2], done);
     });
-  });
+  }
+
+  setup(ensureUsers);
 
   suite("requesting friends", function() {
     suite(".requestFriend", function () {
@@ -56,18 +58,6 @@ suite("friends", function() {
       });
       // test the basic behavior
       requestFriendBehavior();
-
-      test("requesting a 2nd time should have no effect", function (done) {
-        User.requestFriend(u1, u2, function (err, fships) {
-          fships.friender.status.should.eql(Status.Requested);
-
-          User.findOne(u2._id, pathname, function (err, doc) {
-            doc[pathname].length.should.eql(1);
-            doc[pathname].id(u1.id).status.should.eql(Status.Pending);
-            done();
-          });
-        });
-      });
 
       test("request by requested should accept friendship on both sides", function (done) {
         User.requestFriend(u2, u1, function (err, fships) {
@@ -79,6 +69,17 @@ suite("friends", function() {
               doc[pathname].id(u1.id).status.should.eql(Status.Accepted);
               done();
             });
+          });
+        });
+      });
+
+      test("requesting a 2nd time should have no effect", function (done) {
+        User.requestFriend(u1, u2, function (err, fships) {
+          fships.friender.status.should.eql(Status.Requested);
+          User.findById(u2._id, pathname, function (err, doc) {
+            doc[pathname].length.should.eql(1);
+            doc[pathname].id(u1._id).status.should.eql(Status.Pending);
+            done();
           });
         });
       });
@@ -138,7 +139,6 @@ suite("friends", function() {
 
     suite("#requestFriend", function () {
       setup(function (done) {
-        var test = this;
         u1.requestFriend(u2, done);
       });
       requestFriendBehavior();
@@ -233,14 +233,16 @@ suite("friends", function() {
 
   suite("removing friends", function () {
     setup(function (done) {
-      User.requestFriend(u1, u2, function () {
-        User.requestFriend(u2, u1, done);
-      });
-    });
+      ensureUsers(function () {
+        User.requestFriend(u1, u2, function () {
+          User.requestFriend(u2, u1, done);
+        })
+      })
+    })
 
-    suite(".removeFriendship", function () {
+    suite(".removeFriend", function () {
       setup(function (done) {
-        User.removeFriendship(u1, u2, done);
+        User.removeFriend(u1, u2, done);
       })
       removeFriendBehavior();
     })
