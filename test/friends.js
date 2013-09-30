@@ -2,6 +2,9 @@ var mongoose = require("mongoose")
   , _ = require('underscore')
   , friends = require("../")
   , Status = friends.Status
+  , async = require("async")
+  , assert = require("assert")
+  , should = require("should")
 
 
 // mongoose.set("debug", true);
@@ -15,7 +18,7 @@ var collName = "friendtestusers";
 /**
  * path name for the friends array on the model
  */
-var pathname = "_foobars";
+var pathname = "foobars";
 
 /**
  * Connect to test
@@ -162,6 +165,7 @@ suite("friends", function() {
   });
 
   suite("getting friends", function () {
+
     setup(function (done) {
       User.requestFriend(u1, u2, done);
     });
@@ -172,6 +176,73 @@ suite("friends", function() {
 
     suite("#getFriends", function () {
       getFriendBehavior();
+    });
+
+    suite("sorting & limiting", function () {
+      var u3, u4;
+
+      var reciprocate = function (a, b) {
+        return function (done) {
+          a.requestFriend(b, function () {
+            b.requestFriend(a, done);
+          })
+        }
+      }
+
+      setup(function (done) {
+        u3 = new User({name: "Zeke"})
+        u4 = new User({name: "Beatrice"})
+        u5 = new User({name: "Dan"})
+        u6 = new User({name: "Norm"})
+        User.create([u3, u4, u5, u6], function () {
+          async.parallel([
+            reciprocate(u1, u2),
+            reciprocate(u1, u3),
+            reciprocate(u1, u4),
+            reciprocate(u1, u5),
+            reciprocate(u1, u6)
+          ], function () {
+            User.getFriends(u1, function (err, friends) {
+              // sanity
+              friends.length.should.eql(5);
+              done();
+            });
+          });
+        });
+      });
+
+      test("conditions", function (done) {
+        u1.getFriends({_id: u6._id}, function (err, friends) {
+          friends.length.should.eql(1);
+          friends[0].friend._id.should.eql(u6._id);
+          done();
+        });
+      });
+
+      test("select fields", function (done) {
+        u1.getFriends({_id: u6._id}, {_id: 1}, function (err, friends) {
+          should.not.exist(friends[0].friend.name);
+          friends[0].friend._id.should.eql(u6._id);
+          done();
+        });
+      });
+
+      test("limiting", function (done) {
+        User.getFriends(u1, {}, null, {limit: 2}, function (err, friends) {
+          friends.length.should.eql(2);
+          done();
+        });
+      });
+
+      test("sorting", function (done) {
+        var names = _.pluck([u2, u3, u4, u5, u6], "name").sort();
+        User.getFriends(u1, {}, null, {sort: {name: 1}}, function (err, friends) {
+          assert.deepEqual(names, _.map(friends, function (fship) {
+            return fship.friend.name;
+          }));
+          done();
+        });
+      });
     });
 
     function getFriendBehavior(isStatic) {
@@ -193,10 +264,13 @@ suite("friends", function() {
             done();
           }
 
+          var conditions = {};
+          conditions[pathname+".status"] = status;
+
           if (isStatic) {
-            User.getFriends(user, {status: status}, cb)
+            User.getFriends(user, conditions, null, {sort: {name: 1}}, cb)
           } else {
-            user.getFriends({status: status}, cb);
+            user.getFriends(conditions, cb);
           }
         }
       }
