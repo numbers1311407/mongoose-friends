@@ -41,7 +41,7 @@ and "pending", respectively.
 
 To accept, just reciprocate the request:
 
-    User.requestFriend(user1._id, user2._id, callback);
+    User.requestFriend(user2._id, user1._id, callback);
 
 The two users are now friends:
 
@@ -58,19 +58,21 @@ The two users are now friends:
 To remove a friendship at any point in the process, just:
 
     User.removeFriend(user1, user2, callback);
+    // or vice-versa
+    User.removeFriend(user2, user1, callback);
 
 `getFriends` takes a few options, notably:
 
-- `status`: filter for only a particular status, e.g:
+- `status` filter for only a particular status, e.g:
 
-    var Status = friends.Status;
-    User.getFriends(user1, {status: Status.pending}, cb);
+        var Status = friends.Status;
+        User.getFriends(user1, {status: Status.pending}, cb);
 
-- `select`: tailor the selected fields for returned friends
+- `select` tailor the selected fields for returned friends
 
-    User.getFriends(user1, {select: {name: 1}}, function (err, fships) {
-      fships[0].friend; //=> {_id: "someid", name: "joebob"}
-    })
+        User.getFriends(user1, {select: {name: 1}}, function (err, fships) {
+          fships[0].friend; //=> {_id: "someid", name: "joebob"}
+        })
 
 
 All the static methods have instance variants:
