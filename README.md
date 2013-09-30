@@ -4,6 +4,12 @@ mongoose-friends [![Build Status](https://travis-ci.org/numbers1311407/mongoose-
 2-way friendship relationship plugin for Mongoose ODM
 
 
+Installation 
+===
+
+    npm install mongoose-friends
+
+
 Description and usage
 ===
 
@@ -90,9 +96,3 @@ If you do not want this behavior for whatever reason, just pass
 `index: false` to the plugin options, like:
 
     schema.plugin(friends({index: false}));
-
-
-Installation 
-===
-
-    npm install mongoose-friends
