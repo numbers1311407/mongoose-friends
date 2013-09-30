@@ -11,6 +11,12 @@ var mongoose = require("mongoose")
  */
 var collName = "friendtestusers";
 
+
+/**
+ * path name for the friends array on the model
+ */
+var pathname = "_foobars";
+
 /**
  * Connect to test
  */
@@ -24,7 +30,7 @@ var UserSchema = new mongoose.Schema({
   name: String
 })
 
-UserSchema.plugin(friends());
+UserSchema.plugin(friends({pathName: pathname}));
 
 var User = mongoose.model("User", UserSchema, collName);
 
@@ -55,9 +61,9 @@ suite("friends", function() {
         User.requestFriend(u1, u2, function (err, fships) {
           fships.friender.status.should.eql(Status.Requested);
 
-          User.findOne(u2._id, "_friends", function (err, doc) {
-            doc._friends.length.should.eql(1);
-            doc._friends.id(u1.id).status.should.eql(Status.Pending);
+          User.findOne(u2._id, pathname, function (err, doc) {
+            doc[pathname].length.should.eql(1);
+            doc[pathname].id(u1.id).status.should.eql(Status.Pending);
             done();
           });
         });
@@ -67,10 +73,10 @@ suite("friends", function() {
         User.requestFriend(u2, u1, function (err, fships) {
           fships.friender.status.should.eql(Status.Accepted);
 
-          User.findById(u1._id, "_friends", function (err, doc) {
-            doc._friends.id(u2.id).status.should.eql(Status.Accepted);
-            User.findById(u2._id, "_friends", function (err, doc) {
-              doc._friends.id(u1.id).status.should.eql(Status.Accepted);
+          User.findById(u1._id, pathname, function (err, doc) {
+            doc[pathname].id(u2.id).status.should.eql(Status.Accepted);
+            User.findById(u2._id, pathname, function (err, doc) {
+              doc[pathname].id(u1.id).status.should.eql(Status.Accepted);
               done();
             });
           });
@@ -79,24 +85,23 @@ suite("friends", function() {
 
       suite("when requestee has already accepted", function () {
         setup(function (done) {
-          User.findOneAndUpdate({
-            _id: u2._id,
-            _friends: {$elemMatch: {_id: u1._id}}
-          }, {
-            $set: {
-              "_friends.$.status": Status.Accepted
-            }
-          }, done);
+          var query = {_id: u2._id};
+          query[pathname] = {$elemMatch: {_id: u1._id}};
+
+          var update = {$set: {}};
+          update.$set[pathname+".$.status"] = Status.Accepted;
+
+          User.findOneAndUpdate(query, update, done);
         });
 
         test("re-requesting should accept friendship on both sides", function (done) {
           User.requestFriend(u1, u2, function (err, fships) {
             fships.friender.status.should.eql(Status.Accepted);
 
-            User.findById(u1._id, "_friends", function (err, doc) {
-              doc._friends.id(u2.id).status.should.eql(Status.Accepted);
-              User.findById(u2._id, "_friends", function (err, doc) {
-                doc._friends.id(u1.id).status.should.eql(Status.Accepted);
+            User.findById(u1._id, pathname, function (err, doc) {
+              doc[pathname].id(u2.id).status.should.eql(Status.Accepted);
+              User.findById(u2._id, pathname, function (err, doc) {
+                doc[pathname].id(u1.id).status.should.eql(Status.Accepted);
                 done();
               });
             });
@@ -106,24 +111,23 @@ suite("friends", function() {
 
       suite("when requestee has requested requester", function () {
         setup(function (done) {
-          User.findOneAndUpdate({
-            _id: u2._id,
-            _friends: {$elemMatch: {_id: u1._id}}
-          }, {
-            $set: {
-              "_friends.$.status": Status.Requested
-            }
-          }, done);
+          var query = {_id: u2._id};
+          query[pathname] = {$elemMatch: {_id: u1._id}};
+
+          var update = {$set: {}};
+          update.$set[pathname+".$.status"] = Status.Requested;
+
+          User.findOneAndUpdate(query, update, done);
         });
 
         test("re-requesting should accept friendship on both sides", function (done) {
           User.requestFriend(u1, u2, function (err, fships) {
             fships.friender.status.should.eql(Status.Accepted);
 
-            User.findById(u1._id, "_friends", function (err, doc) {
-              doc._friends.id(u2.id).status.should.eql(Status.Accepted);
-              User.findById(u2._id, "_friends", function (err, doc) {
-                doc._friends.id(u1.id).status.should.eql(Status.Accepted);
+            User.findById(u1._id, pathname, function (err, doc) {
+              doc[pathname].id(u2.id).status.should.eql(Status.Accepted);
+              User.findById(u2._id, pathname, function (err, doc) {
+                doc[pathname].id(u1.id).status.should.eql(Status.Accepted);
                 done();
               });
             });
@@ -142,15 +146,15 @@ suite("friends", function() {
 
     function requestFriendBehavior () {
       test("requester should have requested friend request", function (done) {
-        User.findById(u1._id, "_friends", function (err, doc) {
-          doc._friends.id(u2.id).status.should.eql(Status.Requested);
+        User.findById(u1._id, pathname, function (err, doc) {
+          doc[pathname].id(u2.id).status.should.eql(Status.Requested);
           done();
         });
       });
 
       test("requestee should have pending friend request", function (done) {
-        User.findById(u2._id, "_friends", function (err, doc) {
-          doc._friends.id(u1.id).status.should.eql(Status.Pending);
+        User.findById(u2._id, pathname, function (err, doc) {
+          doc[pathname].id(u1.id).status.should.eql(Status.Pending);
           done();
         });
       });
