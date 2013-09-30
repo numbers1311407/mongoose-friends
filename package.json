@@ -1,6 +1,6 @@
 {
   "name": "mongoose-friends",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "2-way friendship relationship plugin for Mongoose ODM",
   "author": "Travis Cox <numbers1311407@gmail.com>",
   "main": "index.js",
