@@ -22,7 +22,8 @@
   },
   "dependencies": {
     "underscore": "~1.5.2",
-    "mongoose": "~3.6.20"
+    "mongoose": "~3.6.20",
+    "async": "~0.2.9"
   },
   "devDependencies": {
     "mocha": "~1.13.0",
