@@ -178,6 +178,82 @@ suite("friends", function() {
       getFriendBehavior();
     });
 
+    suite("status helpers", function () {
+      function check(type, user, len, instance) {
+        return function (done) {
+          user = user ? u1 : u2;
+
+          var cb = function (err, f) {
+            f.length.should.eql(len);
+            done();
+          }
+
+          if (instance) {
+            user["get"+type+"Friends"](cb);
+          } else {
+            User["get"+type+"Friends"](user, cb);
+          }
+        }
+      }
+
+      suite("after request", function () {
+        suite(".getPendingFriends", function () {
+          test("requester should have 0", check('Pending', 1, 0))
+          test("requestee should have 1", check('Pending', 0, 1))
+        })
+        suite("#getPendingFriends", function () {
+          test("requester should have 0", check('Pending', 1, 0, 1))
+          test("requestee should have 1", check('Pending', 0, 1, 1))
+        })
+        suite(".getAcceptedFriends", function () {
+          test("requester should have 0", check('Accepted', 1, 0))
+          test("requestee should have 0", check('Accepted', 0, 0))
+        })
+        suite("#getAcceptedFriends", function () {
+          test("requester should have 0", check('Accepted', 1, 0, 1))
+          test("requestee should have 0", check('Accepted', 0, 0, 1))
+        })
+        suite(".getRequestedFriends", function () {
+          test("requester should have 1", check('Requested', 1, 1))
+          test("requestee should have 0", check('Requested', 0, 0))
+        })
+        suite("#getRequestedFriends", function () {
+          test("requester should have 1", check('Requested', 1, 1, 1))
+          test("requestee should have 0", check('Requested', 0, 0, 1))
+        })
+      })
+
+      suite("after reciprocation", function () {
+        setup(function (done) {
+          User.requestFriend(u2, u1, done);
+        })
+        suite(".getPendingFriends", function () {
+          test("requester should have 0", check('Pending', 1, 0))
+          test("requestee should have 0", check('Pending', 0, 0))
+        })
+        suite("#getPendingFriends", function () {
+          test("requester should have 0", check('Pending', 1, 0, 1))
+          test("requestee should have 0", check('Pending', 0, 0, 1))
+        })
+        suite(".getAcceptedFriends", function () {
+          test("requester should have 1", check('Accepted', 1, 1))
+          test("requestee should have 1", check('Accepted', 0, 1))
+        })
+        suite("#getAcceptedFriends", function () {
+          test("requester should have 1", check('Accepted', 1, 1, 1))
+          test("requestee should have 1", check('Accepted', 0, 1, 1))
+        })
+        suite(".getRequestedFriends", function () {
+          test("requester should have 0", check('Requested', 1, 0))
+          test("requestee should have 0", check('Requested', 0, 0))
+        })
+        suite("#getRequestedFriends", function () {
+          test("requester should have 0", check('Requested', 1, 0, 1))
+          test("requestee should have 0", check('Requested', 0, 0, 1))
+        })
+      })
+    });
+
     suite("sorting & limiting", function () {
       var u3, u4;
 
