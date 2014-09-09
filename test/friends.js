@@ -265,6 +265,12 @@ suite("friends", function() {
         }
       }
 
+      var request = function (a, b) {
+        return function (done) {
+          a.requestFriend(b, done);
+        }
+      }
+
       setup(function (done) {
         u3 = new User({name: "Zeke"})
         u4 = new User({name: "Beatrice"})
@@ -275,8 +281,10 @@ suite("friends", function() {
             reciprocate(u1, u2),
             reciprocate(u1, u3),
             reciprocate(u1, u4),
-            reciprocate(u1, u5),
-            reciprocate(u1, u6)
+            request(u1, u5),
+            request(u1, u6),
+            reciprocate(u5, u6),
+            request(u5, u4)
           ], function () {
             User.getFriends(u1, function (err, friends) {
               // sanity
@@ -287,10 +295,22 @@ suite("friends", function() {
         });
       });
 
-      test("conditions", function (done) {
-        u1.getFriends({_id: u6._id}, function (err, friends) {
-          friends.length.should.eql(1);
-          friends[0].friend._id.should.eql(u6._id);
+      test("status condition (Accepted)", function (done) {
+        var conditions = {};
+        conditions[pathname+".status"] = Status.Accepted;
+
+        u1.getFriends(conditions, function (err, friends) {
+          friends.length.should.eql(3);
+          done();
+        });
+      });
+
+      test("status condition (Requested)", function (done) {
+        var conditions = {};
+        conditions[pathname+".status"] = Status.Requested;
+
+        u1.getFriends(conditions, function (err, friends) {
+          friends.length.should.eql(2);
           done();
         });
       });
