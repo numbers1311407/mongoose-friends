@@ -1,5 +1,4 @@
 var mongoose = require("mongoose")
-  , _ = require('underscore')
   , friends = require("../")
   , Status = friends.Status
   , async = require("async")
@@ -331,9 +330,9 @@ suite("friends", function() {
       });
 
       test("sorting", function (done) {
-        var names = _.pluck([u2, u3, u4, u5, u6], "name").sort();
+        var names = [u2, u3, u4, u5, u6].map(function (u) { return u.name; }).sort();
         User.getFriends(u1, {}, null, {sort: {name: 1}}, function (err, friends) {
-          assert.deepEqual(names, _.map(friends, function (fship) {
+          assert.deepEqual(names, friends.map(function (fship) {
             return fship.friend.name;
           }));
           done();

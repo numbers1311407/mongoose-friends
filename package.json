@@ -21,7 +21,6 @@
     "url": "https://github.com/numbers1311407/mongoose-friends/issues"
   },
   "dependencies": {
-    "underscore": "~1.5.2",
     "async": "~0.2.9"
   },
   "devDependencies": {
