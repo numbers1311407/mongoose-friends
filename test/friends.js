@@ -444,46 +444,6 @@ suite("friends", function() {
     }
   });
 
-  suite("removing friends (by string)", function () {
-    setup(function (done) {
-      ensureUsers(function () {
-        User.requestFriend(u1, u2, function () {
-          User.requestFriend(u2, u1, done);
-        })
-      })
-    })
-
-    suite(".removeFriend", function () {
-      setup(function (done) {
-        User.removeFriend(u1id, u2id, done);
-      })
-      removeFriendBehavior();
-    })
-
-    suite("#removeFriend", function () {
-      setup(function (done) {
-        u1.removeFriend(u2id, done);
-      })
-      removeFriendBehavior();
-    })
-
-    function removeFriendBehavior() {
-      test("remover should have no friendship", function (done) {
-        User.getFriends(u1, function (err, friends) {
-          friends.length.should.eql(0);
-          done();
-        });
-      });
-
-      test("removee should no longer have friendship", function (done) {
-        User.getFriends(u2, function (err, friends) {
-          friends.length.should.eql(0);
-          done();
-        });
-      });
-    }
-  });
-
   suiteTeardown(function(done) {
     mongoose.connection.db.dropCollection(collName, done);
   });
