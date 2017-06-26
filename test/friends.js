@@ -41,11 +41,15 @@ var User = mongoose.model("User", UserSchema, collName);
  *
  */
 suite("friends", function() {
-  var u1, u2;
+  var u1, u2, u1id, u2id;
 
   function ensureUsers(done) {
     u1 = new User({name: "Alice"})
     u2 = new User({name: "Roger"})
+
+    u1id = u1._id.toString();
+    u2id = u2._id.toString();
+
     User.remove(function () {
       User.create([u1, u2], done);
     });
@@ -419,6 +423,46 @@ suite("friends", function() {
     suite("#removeFriend", function () {
       setup(function (done) {
         u1.removeFriend(u2, done);
+      })
+      removeFriendBehavior();
+    })
+
+    function removeFriendBehavior() {
+      test("remover should have no friendship", function (done) {
+        User.getFriends(u1, function (err, friends) {
+          friends.length.should.eql(0);
+          done();
+        });
+      });
+
+      test("removee should no longer have friendship", function (done) {
+        User.getFriends(u2, function (err, friends) {
+          friends.length.should.eql(0);
+          done();
+        });
+      });
+    }
+  });
+
+  suite("removing friends (by string)", function () {
+    setup(function (done) {
+      ensureUsers(function () {
+        User.requestFriend(u1, u2, function () {
+          User.requestFriend(u2, u1, done);
+        })
+      })
+    })
+
+    suite(".removeFriend", function () {
+      setup(function (done) {
+        User.removeFriend(u1id, u2id, done);
+      })
+      removeFriendBehavior();
+    })
+
+    suite("#removeFriend", function () {
+      setup(function (done) {
+        u1.removeFriend(u2id, done);
       })
       removeFriendBehavior();
     })
